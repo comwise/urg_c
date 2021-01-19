@@ -1,15 +1,14 @@
 /*!
   \file
   \brief TCP/IP read/write functions
-
   \author Katsumi Kimoto
 
-  $Id: urg_tcpclient.c,v d746d6f9127d 2011/05/08 23:10:44 satofumi $
+  $Id$
 */
 
 // http://www.ne.jp/asahi/hishidama/home/tech/lang/socket.html
 
-#include "urg_c/urg_detect_os.h"
+#include "urg_detect_os.h"
 #include <string.h>
 #if defined(URG_WINDOWS_OS)
 #else
@@ -17,13 +16,19 @@
 #include <fcntl.h>
 #include <errno.h>
 #endif
-#include "urg_c/urg_tcpclient.h"
+#include "urg_tcpclient.h"
 
 #include <stdio.h>
 
 enum {
     Invalid_desc = -1,
 };
+
+// Checks wheter is is a EOL character
+static int is_linefeed(const char ch)
+{
+    return ((ch == '\r') || (ch == '\n')) ? 1 : 0;
+}
 
 
 static void tcpclient_buffer_init(urg_tcpclient_t* cli)
@@ -118,7 +123,7 @@ int tcpclient_open(urg_tcpclient_t* cli, const char* ip_str, int port_num)
     }
 
 #if defined(URG_WINDOWS_OS)
-    //ノンブロックに変更
+    // Configures non-blocking mode
     flag = 1;
     ioctlsocket(cli->sock_desc, FIONBIO, &flag);
 
@@ -136,16 +141,16 @@ int tcpclient_open(urg_tcpclient_t* cli, const char* ip_str, int port_num)
 
         ret = select((int)cli->sock_desc + 1, &rmask, &wmask, NULL, &tv);
         if (ret == 0) {
-            // タイムアウト
+            // Operation timed out
             tcpclient_close(cli);
             return -2;
         }
     }
-    //ブロックモードにする
+    // Returns to blocking mode
     set_block_mode(cli);
 
 #else
-    //ノンブロックに変更
+    // Configures non-blocking mode
     flag = fcntl(cli->sock_desc, F_GETFL, 0);
     fcntl(cli->sock_desc, F_SETFL, flag | O_NONBLOCK);
 
@@ -156,31 +161,31 @@ int tcpclient_open(urg_tcpclient_t* cli, const char* ip_str, int port_num)
             return -1;
         }
 
-        // EINPROGRESS:コネクション要求は始まったが、まだ完了していない
+        // EINPROGRESS: a connection request was already received and not completed yet
         FD_ZERO(&rmask);
         FD_SET(cli->sock_desc, &rmask);
         wmask = rmask;
 
         ret = select(cli->sock_desc + 1, &rmask, &wmask, NULL, &tv);
         if (ret <= 0) {
-            // タイムアウト処理
+            // Operation timed out
             tcpclient_close(cli);
             return -2;
         }
 
         if (getsockopt(cli->sock_desc, SOL_SOCKET, SO_ERROR, (int*)&sock_optval,
                        (socklen_t*)&sock_optval_size) != 0) {
-            // 接続に失敗
+            // Connection failed
             tcpclient_close(cli);
             return -3;
         }
 
         if (sock_optval != 0) {
-            // 接続に失敗
+            // Connection failed
             tcpclient_close(cli);
             return -4;
         }
-
+        // Returns to blocking mode
         set_block_mode(cli);
     }
 #endif
@@ -306,7 +311,7 @@ int tcpclient_readline(urg_tcpclient_t* cli,
         if (n <= 0) {
             break; // error
         }
-        if (ch == '\n' || ch == '\r') {
+        if (is_linefeed(ch)) {
             break; // success
         }
         userbuf[i] = ch;

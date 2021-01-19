@@ -3,71 +3,57 @@
 
 /*!
   \file
-  \~japanese
-  \brief URG ƒZƒ“ƒT§Œä
+  \brief URG sensor control
 
-  URG —p‚ÌŠî–{“I‚ÈŠÖ”‚ğ’ñ‹Ÿ‚µ‚Ü‚·B
+  Provides the basic functions for URG
 
-
-  \~english
-  \brief URG sensor
-
-  URG —p‚ÌŠî–{“I‚ÈŠÖ”‚ğ’ñ‹Ÿ‚µ‚Ü‚·B
-
-  \~
   \author Satofumi KAMIMURA
 
-  $Id: urg_sensor.h,v 540bc11f70c8 2011/05/08 23:04:49 satofumi $
+  $Id$
 */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "urg_c/urg_connection.h"
-#include "urg_c/urg_time.h"
-
+#include "urg_connection.h"
 
     /*!
-      \~japanese
-      \brief Œv‘ªƒ^ƒCƒv
+      \brief Measurement types
     */
     typedef enum {
-        URG_DISTANCE,           /*!< \~japanese ‹——£ */
-        URG_DISTANCE_INTENSITY, /*!< \~japanese ‹——£ + ‹­“x */
-        URG_MULTIECHO,          /*!< \~japanese ƒ}ƒ‹ƒ`ƒGƒR[‚Ì‹——£ */
-        URG_MULTIECHO_INTENSITY, /*!< \~japanese ƒ}ƒ‹ƒ`ƒGƒR[‚Ì(‹——£ + ‹­“x) */
-        URG_STOP,                /*!< \~japanese Œv‘ª‚Ì’â~ */
-        URG_UNKNOWN,             /*!< \~japanese •s–¾ */
+        URG_DISTANCE,           //!<  Distance (range)
+        URG_DISTANCE_INTENSITY, //!<  Distance (range) and intensity (strength)
+        URG_MULTIECHO,          //!<  Multiecho distance
+        URG_MULTIECHO_INTENSITY, //!<  Multiecho distance and intensity
+        URG_STOP,                //!<  Stop measurement
+        URG_UNKNOWN,             //!<  Unknown measurement type
     } urg_measurement_type_t;
 
     /*!
-      \~japanese
-      \brief ‹——£‚ğ‰½ byte ‚Å•\Œ»‚·‚é‚©‚Ìw’è
+      \brief Distance data encoding types (number of bytes)
     */
     typedef enum {
-        URG_COMMUNICATION_3_BYTE, /*!< \~japanese ‹——£‚ğ 3 byte ‚Å•\Œ»‚·‚é */
-        URG_COMMUNICATION_2_BYTE, /*!< \~japanese ‹——£‚ğ 2 byte ‚Å•\Œ»‚·‚é */
+        URG_COMMUNICATION_3_BYTE, //!<  Use 3-bytes encoding for distance
+        URG_COMMUNICATION_2_BYTE, //!<  Use 2-bytes encoding for distance
     } urg_range_data_byte_t;
 
 
     enum {
-        URG_SCAN_INFINITY = 0,  /*!< \~japanese –³ŒÀ‰ñ‚Ìƒf[ƒ^æ“¾ */
-        URG_MAX_ECHO = 3, /*!< \~japanese ƒ}ƒ‹ƒ`ƒGƒR[‚ÌÅ‘åƒGƒR[” */
+        URG_SCAN_INFINITY = 0,  //!<  Continuous data scanning
+        URG_MAX_ECHO = 3, //!<  Maximum number of echoes
     };
 
 
-    /*! \~japanese ƒGƒ‰[ƒnƒ“ƒhƒ‰ \~english error handler */
+    /*!
+       \brief Error handler
+    */
     typedef urg_measurement_type_t
     (*urg_error_handler)(const char *status, void *urg);
 
 
     /*!
-      \~japanese
-      \brief URG ƒZƒ“ƒTŠÇ—
-
-      \~english
-      \brief URG sensor
+      \brief URG sensor control structure
     */
     typedef struct
     {
@@ -104,29 +90,41 @@ extern "C" {
         char return_buffer[80];
     } urg_t;
 
+    /*!
+      \brief URG control structure (urg_t) initialization
+
+      Initialize URG control structure(urg_t)
+
+      \param[in,out] urg URG control structure
+
+      \attention
+      This function is executed at the start of urg_open ().
+      Call this function if you want to initialize the URG control structure (urg_t) arbitrarily.
+
+      \see urg_open()
+    */
+    void urg_t_initialize(urg_t *urg);
 
     /*!
-      \~japanese
-      \brief Ú‘±
+      \brief Connect
 
-      w’è‚µ‚½ƒfƒoƒCƒX‚ÉÚ‘±‚µA‹——£‚ğŒv‘ª‚Å‚«‚é‚æ‚¤‚É‚·‚éB
+      Connects to the given device and enables measurement
 
-      \param[in,out] urg URG ƒZƒ“ƒTŠÇ—
-      \param[in] connection_type ’ÊMƒ^ƒCƒv
-      \param[in] device_or_address Ú‘±ƒfƒoƒCƒX–¼
-      \param[in] baudrate_or_port Ú‘±ƒ{[ƒŒ[ƒg [bps] / TCP/IP ƒ|[ƒg
+      \param[in,out] urg URG control structure
+      \param[in] connection_type Type of the connection
+      \param[in] device_or_address Name of the device
+      \param[in] baudrate_or_port Connection baudrate [bps] or TCP/IP port number
 
-      \retval 0 ³í
-      \retval <0 ƒGƒ‰[
+      \retval 0 Successful
+      \retval <0 Error
 
-      connection_type ‚É‚ÍAˆÈ‰º‚Ì€–Ú‚ªw’è‚Å‚«‚Ü‚·B
+      The following values can be used in connection_type:
 
       - #URG_SERIAL
-      - ƒVƒŠƒAƒ‹AUSB Ú‘±
+      - Serial, USB connection
 
       - #URG_ETHERNET
-      - ƒC[ƒT[ƒlƒbƒgÚ‘±
-
+      - Ethernet connection
       Example
       \code
       urg_t urg;
@@ -139,9 +137,8 @@ extern "C" {
 
       urg_close(&urg); \endcode
 
-      \attention URG C ƒ‰ƒCƒuƒ‰ƒŠ‚Ì‘¼‚ÌŠÖ”‚ğŒÄ‚Ño‚·‘O‚ÉA‚±‚ÌŠÖ”‚ğŒÄ‚Ño‚·•K—v‚ª‚ ‚è‚Ü‚·B
+      \attention Call this function before using any other function on the URG library.
 
-      \~
       \see urg_close()
     */
     extern int urg_open(urg_t *urg, urg_connection_type_t connection_type,
@@ -150,42 +147,40 @@ extern "C" {
 
 
     /*!
-      \~japanese
-      \brief Ø’f
+      \brief Disconnection
 
-      ƒŒ[ƒU‚ğÁ“”‚µAURG ‚Æ‚ÌÚ‘±‚ğØ’f‚µ‚Ü‚·B
+      Turns off the laser and closes the connection with the URG sensor.
 
-      \param[in,out] urg URG ƒZƒ“ƒTŠÇ—
-
-      \~
+      \param[in,out] urg URG control structure
       \see urg_open()
     */
     extern void urg_close(urg_t *urg);
 
 
     /*!
-      \brief ƒ^ƒCƒ€ƒAƒEƒgŠÔ‚Ìİ’è
+      \brief Defines the timeout value to use during communication
 
-      \param[in,out] urg URG ƒZƒ“ƒTŠÇ—
-      \param[in] msec ƒ^ƒCƒ€ƒAƒEƒg‚·‚éŠÔ [msec]
+      \param[in,out] urg URG control structure
+      \param[in] msec Timeout value [msec]
 
-      \attention urg_open() ‚ğŒÄ‚Ño‚·‚Æ timeout ‚Ìİ’è’l‚ÍƒfƒtƒHƒ‹ƒg’l‚É‰Šú‰»‚³‚ê‚é‚½‚ßA‚±‚ÌŠÖ”‚Í urg_open() Œã‚ÉŒÄ‚Ño‚·‚±‚ÆB
+      \attention The urg_open() function always sets the timeout value to its default, if necessary call this function after urg_open().
     */
     extern void urg_set_timeout_msec(urg_t *urg, int msec);
 
 
-    /*! \~japanese ƒ^ƒCƒ€ƒXƒ^ƒ“ƒvƒ‚[ƒh‚ÌŠJn */
+    /*!
+       \brief Starts the timestamp mode (time adjustment state)
+    */
     extern int urg_start_time_stamp_mode(urg_t *urg);
 
 
     /*!
-      \~japanese
-      \brief ƒ^ƒCƒ€ƒXƒ^ƒ“ƒv‚Ìæ“¾
+      \brief Read timestamp data
 
-      \param[in,out] urg URG ƒZƒ“ƒTŠÇ—
+      \param[in,out] urg URG control structure
 
-      \retval >=0 ƒ^ƒCƒ€ƒXƒ^ƒ“ƒv [msec]
-      \retval <0 ƒGƒ‰[
+      \retval >=0 Timestamp value [msec]
+      \retval <0 Error
 
       Example
       \code
@@ -195,49 +190,51 @@ extern "C" {
       time_stamp = urg_time_stamp(&urg);
       after_ticks = get_pc_msec_function();
 
-      // ƒ^ƒCƒ€ƒXƒ^ƒ“ƒv‚É‚Â‚¢‚Ä‚ÌŒvZ
+      // Processing of timestamp data
       ...
 
       urg_stop_time_stamp_mode(&urg); \endcode
 
-      Ú‚µ‚­‚Í \ref sync_time_stamp.c ‚ğQÆ‚µ‚Ä‰º‚³‚¢B
+      For a detailed use consult the \ref sync_time_stamp.c example
     */
     extern long urg_time_stamp(urg_t *urg);
 
 
-    /*! \~japanese ƒ^ƒCƒ€ƒXƒ^ƒ“ƒvƒ‚[ƒh‚ÌI—¹ */
+    /*!
+       \brief Stops the timestamp mode (returning to idle state)
+    */
     extern int urg_stop_time_stamp_mode(urg_t *urg);
 
 
     /*!
-      \~japanese
-      \brief ‹——£ƒf[ƒ^‚Ìæ“¾‚ğŠJn
+      \brief Start getting distance measurement data
 
-      ‹——£ƒf[ƒ^‚Ìæ“¾‚ğŠJn‚µ‚Ü‚·BÀÛ‚Ìƒf[ƒ^‚Í urg_get_distance(), urg_get_distance_intensity(), urg_get_multiecho(), urg_get_multiecho_intensity() ‚Åæ“¾‚Å‚«‚Ü‚·B
+      Starts measurement data acquisition. The actual data can be retrieved using urg_get_distance(), urg_get_distance_intensity(), urg_get_multiecho(), urg_get_multiecho_intensity().
 
-      \param[in,out] urg URG ƒZƒ“ƒTŠÇ—
-      \param[in] type ƒf[ƒ^Eƒ^ƒCƒv
-      \param[in] scan_times ƒf[ƒ^‚Ìæ“¾‰ñ”
-      \param[in] skip_scan ƒf[ƒ^‚Ìæ“¾ŠÔŠu
+      \param[in,out] urg URG control structure
+      \param[in] type Measurement type
+      \param[in] scan_times Number of scans to request
+      \param[in] skip_scan Interval between scans
 
-      \retval 0 ³í
-      \retval <0 ƒGƒ‰[
+      \retval 0 Successful
+      \retval <0 Error
 
-      type ‚É‚Íæ“¾‚·‚éƒf[ƒ^‚Ìí—Ş‚ğw’è‚µ‚Ü‚·B
+      The following values are possible for the type argument
 
-      - #URG_DISTANCE ... ‹——£ƒf[ƒ^
-      - #URG_DISTANCE_INTENSITY ... ‹——£ƒf[ƒ^‚Æ‹­“xƒf[ƒ^
-      - #URG_MULTIECHO ... ƒ}ƒ‹ƒ`ƒGƒR[”Å‚Ì‹——£ƒf[ƒ^
-      - #URG_MULTIECHO_INTENSITY ... ƒ}ƒ‹ƒ`ƒGƒR[”Å‚Ì(‹——£ƒf[ƒ^‚Æ‹­“xƒf[ƒ^)
+      - #URG_DISTANCE ... Distance (range) data
+      - #URG_DISTANCE_INTENSITY ... Distance (range) and intensity (strength) data
+      - #URG_MULTIECHO ... Multiecho distance data
+      - #URG_MULTIECHO_INTENSITY ... Multiecho distance and intensity data
 
-      scan_times ‚Í‰½‰ñ‚Ìƒf[ƒ^‚ğæ“¾‚·‚é‚©‚ğ 0 ˆÈã‚Ì”‚Åw’è‚µ‚Ü‚·B‚½‚¾‚µA0 ‚Ü‚½‚Í #URG_SCAN_INFINITY ‚ğw’è‚µ‚½ê‡‚ÍA–³ŒÀ‰ñ‚Ìƒf[ƒ^‚ğæ“¾‚µ‚Ü‚·B\n
-      ŠJn‚µ‚½Œv‘ª‚ğ’†’f‚·‚é‚É‚Í urg_stop_measurement() ‚ğg‚¢‚Ü‚·B
+      scan_times defines how many scans to capture from the sensor: >0 means a fixed number of scans, 0 or #URG_SCAN_INFINITY means continuous (infinite) scanning.
+      To interrupt measurement at any time use urg_stop_measurement().
 
-      skip_scan ‚Íƒ~ƒ‰[‚Ì‰ñ“]”‚Ì‚¤‚¿A‚P‰ñ‚ÌƒXƒLƒƒƒ“Œã‚É‰½‰ñƒXƒLƒƒƒ“‚µ‚È‚¢‚©‚ğw’è‚µ‚Ü‚·Bskip_scan ‚Éw’è‚Å‚«‚é”ÍˆÍ‚Í [0, 9] ‚Å‚·B
+      skip_scan means, after obtaining one scan, skip measurement for the following X mirror (motor) revolutions.
+      The values for skip_scan are from the range [0, 9].
 
-      \image html skip_scan_image.png ‰½‰ñ‚É‚P‰ñ‚¾‚¯Œv‘ª‚·‚é‚©
+      \image html skip_scan_image.png shows scan skip
 
-      ‚½‚Æ‚¦‚ÎAƒ~ƒ‰[‚Ì‚P‰ñ“]‚ª 100 [msec] ‚ÌƒZƒ“ƒT‚Å skip_scan ‚É 1 ‚ğw’è‚µ‚½ê‡Aƒf[ƒ^‚Ìæ“¾ŠÔŠu‚Í 200 [msec] ‚É‚È‚è‚Ü‚·B
+      For example, for a sensor with one mirror (motor) revolution is 100 [msec] and skip_scan is set to 1, measurement data will be obtained with an interval of 200 [msec].
 
       Example
       \code
@@ -247,11 +244,10 @@ extern "C" {
       for (i = 0; i < CAPTURE_TIMES; ++i) {
       int n = urg_get_distance(&urg, data, &time_stamp);
 
-      // óM‚µ‚½ƒf[ƒ^‚Ì—˜—p
+      // Processing of obtained data
       ...
       } \endcode
 
-      \~
       \see urg_get_distance(), urg_get_distance_intensity(), urg_get_multiecho(), urg_get_multiecho_intensity(), urg_stop_measurement()
     */
     extern int urg_start_measurement(urg_t *urg, urg_measurement_type_t type,
@@ -259,21 +255,20 @@ extern "C" {
 
 
     /*!
-      \~japanese
-      \brief ‹——£ƒf[ƒ^‚Ìæ“¾
+      \brief Gets distance data
 
-      ƒZƒ“ƒT‚©‚ç‹——£ƒf[ƒ^‚ğæ“¾‚µ‚Ü‚·B–‘O‚É urg_start_measurement() ‚ğ #URG_DISTANCE w’è‚ÅŒÄ‚Ño‚µ‚Ä‚¨‚­•K—v‚ª‚ ‚è‚Ü‚·B
+      Receives distance data from the sensor. The urg_start_measurement() function was called beforehand with #URG_DISTANCE as type argument.
 
-      \param[in,out] urg URG ƒZƒ“ƒTŠÇ—
-      \param[out] data ‹——£ƒf[ƒ^ [mm]
-      \param[out] time_stamp ƒ^ƒCƒ€ƒXƒ^ƒ“ƒv [msec]
+      \param[in,out] urg URG control structure
+      \param[out] data Distance data array [mm]
+      \param[out] time_stamp Timestamp [msec]
 
-      \retval >=0 óM‚µ‚½ƒf[ƒ^ŒÂ”
-      \retval <0 ƒGƒ‰[
+      \retval >=0 Number of data points received
+      \retval <0 Error
 
-      data ‚É‚ÍAƒZƒ“ƒT‚©‚çæ“¾‚µ‚½‹——£ƒf[ƒ^‚ªŠi”[‚³‚ê‚Ü‚·Bdata ‚Íƒf[ƒ^‚ğŠi”[‚·‚é‚ÌƒTƒCƒY‚ğŠm•Û‚µ‚Ä‚¨‚­•K—v‚ª‚ ‚è‚Ü‚·Bdata ‚ÉŠi”[‚³‚ê‚éƒf[ƒ^”‚Í urg_max_data_size() ‚Åæ“¾‚Å‚«‚Ü‚·B
+      Distance data received from the sensor are stored in data array. data array should be previously allocated to hold all the data points requested from the sensor. To know how many data points are received, use the urg_max_data_size() function.
 
-      time_stamp ‚É‚ÍAƒZƒ“ƒT“à•”‚Ìƒ^ƒCƒ€ƒXƒ^ƒ“ƒv‚ªŠi”[‚³‚ê‚Ü‚·Btime_stamp ‚ğæ“¾‚µ‚½‚­‚È‚¢ê‡ NULL ‚ğw’è‚µ‚Ä‰º‚³‚¢B
+      time_stamp will hold the timestamp value stored on the sensor. When not necessary just pass NULL as argument.
 
       Example
       \code
@@ -281,44 +276,41 @@ extern "C" {
 
       ...
 
-      // ƒf[ƒ^‚Ì‚İæ“¾‚·‚é
+      // Gets only measurement data
       urg_start_measurement(&urg, URG_DISTANCE, 1, 0);
       int n = urg_get_distance(&urg, data, NULL);
 
       ...
 
-      // ƒf[ƒ^‚Æƒ^ƒCƒ€ƒXƒ^ƒ“ƒv‚ğæ“¾‚·‚é
+      // Gets measurement data and timestamp
       long time_stamp;
       urg_start_measurement(&urg, URG_DISTANCE, 1, 0);
       n = urg_get_distance(&urg, data, &time_stamp); \endcode
 
-      \~
       \see urg_start_measurement(), urg_max_data_size()
     */
-    extern int urg_get_distance(urg_t *urg, long data[], long *time_stamp, unsigned long long *system_time_stamp);
+    extern int urg_get_distance(urg_t *urg, long data[], long *time_stamp);
 
 
     /*!
-      \~japanese
-      \brief ‹——£‚Æ‹­“xƒf[ƒ^‚Ìæ“¾
+      \brief Gets distance and intensity data
 
-      urg_get_distance() ‚É‰Á‚¦A‹­“xƒf[ƒ^‚Ìæ“¾‚ª‚Å‚«‚éŠÖ”‚Å‚·B–‘O‚É urg_start_measurement() ‚ğ #URG_DISTANCE_INTENSITY w’è‚ÅŒÄ‚Ño‚µ‚Ä‚¨‚­•K—v‚ª‚ ‚è‚Ü‚·B
+      This is an extension to urg_get_distance() which allows to obtain also the intensity (strength) data. The urg_start_measurement() function was called beforehand with #URG_DISTANCE_INTENSITY as type argument.
 
-      \param[in,out] urg URG ƒZƒ“ƒTŠÇ—
-      \param[out] data ‹——£ƒf[ƒ^ [mm]
-      \param[out] intensity ‹­“xƒf[ƒ^
-      \param[out] time_stamp ƒ^ƒCƒ€ƒXƒ^ƒ“ƒv [msec]
+      \param[in,out] urg URG control structure
+      \param[out] data Distance data array [mm]
+      \param[out] intensity Intensity data array
+      \param[out] time_stamp Timestamp [msec]
 
-      \retval >=0 óM‚µ‚½ƒf[ƒ^ŒÂ”
-      \retval <0 ƒGƒ‰[
+      \retval >=0 Number of data points received
+      \retval <0 Error
 
-      ‹­“xƒf[ƒ^‚Æ‚ÍA‹——£ŒvZ‚Ég‚Á‚½”gŒ`‚Ì”½Ë‹­“x‚Å‚ ‚èAƒZƒ“ƒT‚ÌƒVƒŠ[ƒY–ˆ‚É“Á«‚ªˆÙ‚È‚è‚Ü‚·B ‹­“xƒf[ƒ^‚ğg‚¤‚±‚Æ‚ÅA•¨‘Ì‚Ì”½Ë—¦‚âŠÂ‹«‚Ì‘å‚Ü‚©‚È”Z’W‚ğ„‘ª‚Å‚«‚Ü‚·B
+      Intensity data corresponds to the laser strength received during distance calculation. The characteristics of this value changes with sensor series. With some limitations, this property can be used to guess the reflectivity and color shade of an object.
 
-      data, time_stamp ‚É‚Â‚¢‚Ä‚Í urg_get_distance() ‚Æ“¯‚¶‚Å‚·B
+      Regarding data and time_stamp arguments, refer to urg_get_distance().
 
-      intensity ‚É‚ÍAƒZƒ“ƒT‚©‚çæ“¾‚µ‚½‹­“xƒf[ƒ^‚ªŠi”[‚³‚ê‚Ü‚·Bintensity ‚Íƒf[ƒ^‚ğŠi”[‚·‚é‚ÌƒTƒCƒY‚ğŠm•Û‚µ‚Ä‚¨‚­•K—v‚ª‚ ‚è‚Ü‚·Bintensity ‚ÉŠi”[‚³‚ê‚éƒf[ƒ^”‚Í urg_max_data_size() ‚Åæ“¾‚Å‚«‚Ü‚·B
+      Intensity data received from the sensor are stored in intensity array. intensity array should be previously allocated to hold all the data points requested from the sensor. To know how many data points are received, use the urg_max_data_size() function.
 
-      \~
       Example
       \code
       int data_size = urg_max_data_size(&urg);
@@ -330,48 +322,45 @@ extern "C" {
       urg_start_measurement(&urg, URG_DISTANCE_INTENSITY, 1, 0);
       int n = urg_get_distance_intensity(&urg, data, intesnity, NULLL); \endcode
 
-      \~
       \see urg_start_measurement(), urg_max_data_size()
     */
     extern int urg_get_distance_intensity(urg_t *urg, long data[],
                                           unsigned short intensity[],
-                                          long *time_stamp, unsigned long long *system_time_stamp);
+                                          long *time_stamp);
 
 
     /*!
-      \~japanese
-      \brief ‹——£ƒf[ƒ^‚Ìæ“¾ (ƒ}ƒ‹ƒ`ƒGƒR[”Å)
+      \brief Gets distance data (multiecho mode)
 
-      ƒ}ƒ‹ƒ`ƒGƒR[”Å‚Ì‹——£ƒf[ƒ^æ“¾ŠÖ”‚Å‚·B–‘O‚É urg_start_measurement() ‚ğ #URG_MULTIECHO w’è‚ÅŒÄ‚Ño‚µ‚Ä‚¨‚­•K—v‚ª‚ ‚è‚Ü‚·B
+      Receives multiecho distance data from the sensor. The urg_start_measurement() function was called beforehand with #URG_MULTIECHO as type argument.
 
-      \param[in,out] urg URG ƒZƒ“ƒTŠÇ—
-      \param[out] data_multi ‹——£ƒf[ƒ^ [mm]
-      \param[out] time_stamp ƒ^ƒCƒ€ƒXƒ^ƒ“ƒv [msec]
+      \param[in,out] urg URG control structure
+      \param[out] data_multi Distance data array [mm]
+      \param[out] time_stamp Timestamp [msec]
 
-      \retval >=0 óM‚µ‚½ƒf[ƒ^ŒÂ”
-      \retval <0 ƒGƒ‰[
+      \retval >=0 Number of data points received
+      \retval <0 Error
 
-      ƒ}ƒ‹ƒ`ƒGƒR[‚Æ‚Í•¡”‚Ì‹——£ƒf[ƒ^‚Å‚·B ƒ}ƒ‹ƒ`ƒGƒR[‚ÍA‚P‚Â‚ÌƒŒ[ƒU”­Œõ‚É‚¨‚¢‚Ä•¡”‚Ì‹——£ƒf[ƒ^‚ª“¾‚ç‚ê‚½‚Æ‚«‚É“¾‚ç‚ê‚Ü‚·B
+      Multiecho means multiple range responses (echoes). For a single laser beam, multiple laser returns reflected from different targets may be received, and thus multiple range values are calculated.
 
-      \image html multiecho_image.png ƒ}ƒ‹ƒ`ƒGƒR[‚ÌƒCƒ[ƒW}
+      \image html multiecho_image.png shows multiecho measurement
 
-      time_stamp ‚É‚Â‚¢‚Ä‚Í urg_get_distance() ‚Æ“¯‚¶‚Å‚·B
+      time_stamp will hold the timestamp value stored on the sensor, same as with urg_get_distance().
 
-      data_multi ‚É‚ÍAƒZƒ“ƒT‚©‚çæ“¾‚µ‚½‹——£ƒf[ƒ^‚ª‚P‚Â‚Ì step ‚ ‚½‚èÅ‘å‚Å #URG_MAX_ECHO (3 ‚Â)Ši”[‚³‚ê‚Ü‚·Bƒ}ƒ‹ƒ`ƒGƒR[‚ª‘¶İ‚µ‚È‚¢€–Ú‚Ìƒf[ƒ^’l‚Í -1 ‚ªŠi”[‚³‚ê‚Ä‚¢‚Ü‚·B
+      The array data_multi will hold the multiecho range data, up to a maximum of #URG_MAX_ECHO (3) echoes per step. In case the echo does not exists then -1 will be stored on the array.
 
       \verbatim
-      data_multi[0] ... step n ‚Ì‹——£ƒf[ƒ^ (1 ‚Â‚ß)
-      data_multi[1] ... step n ‚Ì‹——£ƒf[ƒ^ (2 ‚Â‚ß)
-      data_multi[2] ... step n ‚Ì‹——£ƒf[ƒ^ (3 ‚Â‚ß)
-      data_multi[3] ... step (n + 1) ‚Ì ‹——£ƒf[ƒ^ (1 ‚Â‚ß)
-      data_multi[4] ... step (n + 1) ‚Ì ‹——£ƒf[ƒ^ (2 ‚Â‚ß)
-      data_multi[5] ... step (n + 1) ‚Ì ‹——£ƒf[ƒ^ (3 ‚Â‚ß)
+      data_multi[0] ... step n range data (1st echo)
+      data_multi[1] ... step n range data (2nd echo)
+      data_multi[2] ... step n range data (3rd echo)
+      data_multi[3] ... step (n + 1) range data (1st echo)
+      data_multi[4] ... step (n + 1) range data (2nd echo)
+      data_multi[5] ... step (n + 1) range data (3rd echo)
       ... \endverbatim
 
-      Ši”[‡‚ÍAŠe step ‚É‚¨‚¢‚Ä urg_get_distance() ‚Ì‚Æ‚«‚Æ“¯‚¶‹——£‚Ìƒf[ƒ^‚ª (3n + 0) ‚ÌˆÊ’u‚ÉŠi”[‚³‚êA‚»‚êˆÈŠO‚Ìƒf[ƒ^‚ª (3n + 1), (3n + 2) ‚ÌˆÊ’u‚É~‡‚ÉŠi”[‚³‚ê‚Ü‚·B\n
-      ‚Â‚Ü‚è data_multi[3n + 1] >= data_multi[3n + 2] ‚É‚È‚é‚±‚Æ‚Í•ÛØ‚³‚ê‚Ü‚·‚ª data_multi[3n + 0] ‚Æ data_multi[3n + 1] ‚ÌŠÖŒW‚Í–¢’è‹`‚Å‚·B(data_multi[3n + 1] == data_multi[3n + 2] ‚ª¬‚è—§‚Â‚Ì‚Íƒf[ƒ^’l‚ª -1 ‚Ì‚Æ‚«B)
+      In the array, the cells numbered (3n + 0) will hold the range data for first echo (same data as for the urg_get_distance() function), for the other cells (3n + 1) and (3n + 2) data is stored in descending order. \n
+      This is, the order data_multi[3n + 1] >= data_multi[3n + 2] is assured, however the relation between data_multi[3n + 0] and data_multi[3n + 1] is not defined. (When data_multi[3n + 1] == data_multi[3n + 2] it means the echo does not exists and the stored value is -1.)
 
-      \~
       Example
       \code
       long *data_multi = malloc(3 * urg_max_data_size(&urg) * sizeof(long));
@@ -381,31 +370,27 @@ extern "C" {
       urg_start_measurement(&urg, URG_MULTIECHO, 1, 0);
       int n = urg_get_distance_intensity(&urg, data_multi, NULLL); \endcode
 
-      \~
       \see urg_start_measurement(), urg_max_data_size()
     */
-    extern int urg_get_multiecho(urg_t *urg, long data_multi[], long *time_stamp, unsigned long long *system_time_stamp);
+    extern int urg_get_multiecho(urg_t *urg, long data_multi[], long *time_stamp);
 
 
     /*!
-      \~japanese
-      \brief ‹——£‚Æ‹­“xƒf[ƒ^‚Ìæ“¾ (ƒ}ƒ‹ƒ`ƒGƒR[”Å)
+      \brief Gets distance and intensity data (multiecho mode)
 
-      urg_get_multiecho() ‚É‰Á‚¦A‹­“xƒf[ƒ^‚Ìæ“¾‚Å‚«‚éŠÖ”‚Å‚·B–‘O‚É urg_start_measurement() ‚ğ #URG_MULTIECHO_INTENSITY w’è‚ÅŒÄ‚Ño‚µ‚Ä‚¨‚­•K—v‚ª‚ ‚è‚Ü‚·B
+      This is an extension to urg_get_multiecho() which allows to obtain also the intensity (strength) data for multiple echoes. The urg_start_measurement() function was called beforehand with #URG_MULTIECHO_INTENSITY as type argument.
 
-      \param[in,out] urg URG ƒZƒ“ƒTŠÇ—
-      \param[out] data_multi ‹——£ƒf[ƒ^ [mm]
-      \param[out] intensity_multi ‹­“xƒf[ƒ^
-      \param[out] time_stamp ƒ^ƒCƒ€ƒXƒ^ƒ“ƒv [msec]
+      \param[in,out] urg URG control structure
+      \param[out] data_multi Distance data array [mm]
+      \param[out] intensity_multi Intensity data array
+      \param[out] time_stamp Timestamp [msec]
 
-      \retval >=0 óM‚µ‚½ƒf[ƒ^ŒÂ”
-      \retval <0 ƒGƒ‰[
+      \retval >=0 Number of data points received
+      \retval <0 Error
 
-      data_multi, time_stamp ‚É‚Â‚¢‚Ä‚Í urg_get_multiecho() ‚Æ“¯‚¶‚Å‚·B
+      data_multi and time_stamp are as described in urg_get_multiecho() function.
 
-      intensity_multi ‚Ìƒf[ƒ^‚Ì•À‚Ñ‚Í data_multi ‚Æ‘Î‰‚µ‚½‚à‚Ì‚É‚È‚è‚Ü‚·Bintensity_multi ‚ÉŠi”[‚³‚ê‚éƒf[ƒ^”‚Í urg_max_data_size() ‚Åæ“¾‚Å‚«‚Ü‚·B
-
-      \~
+      The order of data in the array intensity_multi is defined by how the data_multi array was sorted. The size of the intensity_multi can be obtained using urg_max_data_size().
       Example
       \code
       int data_size = urg_max_data_size(&urg);
@@ -418,26 +403,23 @@ extern "C" {
       int n = urg_get_multiecho_intensity(&urg, data_multi,
       intesnity_multi, NULLL); \endcode
 
-      \~
       \see urg_start_measurement(), urg_max_data_size()
     */
     extern int urg_get_multiecho_intensity(urg_t *urg, long data_multi[],
                                            unsigned short intensity_multi[],
-                                           long *time_stamp, unsigned long long *system_time_stamp);
+                                           long *time_stamp);
 
 
     /*!
-      \~japanese
-      \brief Œv‘ª‚ğ’†’f‚µAƒŒ[ƒU‚ğÁ“”‚³‚¹‚Ü‚·
+      \brief Stops measurement process and turns off the laser.
 
-      \ref urg_start_measurement() ‚ÌŒv‘ª‚ğ’†’f‚µ‚Ü‚·B
+      It stops the measurement started with \ref urg_start_measurement() function.
 
-      \param[in,out] urg URG ƒZƒ“ƒTŠÇ—
+      \param[in,out] urg URG control structure
 
-      \retval 0 ³í
-      \retval <0 ƒGƒ‰[
+      \retval 0 Successful
+      \retval <0 Error
 
-      \~
       Example
       \code
       urg_start_measurement(&urg, URG_DISTANCE, URG_SCAN_INFINITY, 0);
@@ -446,49 +428,46 @@ extern "C" {
       }
       urg_stop_measurement(&urg); \endcode
 
-      \~
       \see urg_start_measurement()
     */
     extern int urg_stop_measurement(urg_t *urg);
 
 
     /*!
-      \~japanese
-      \brief Œv‘ª”ÍˆÍ‚ğİ’è‚µ‚Ü‚·
+      \brief Configure measurement parameters
 
-      ƒZƒ“ƒT‚ªŒv‘ª‚·‚é”ÍˆÍ‚ğ step ’l‚Åw’è‚µ‚Ü‚·Burg_get_distance() ‚È‚Ç‚Ì‹——£ƒf[ƒ^æ“¾‚ÌŠÖ”‚Å•Ô‚³‚ê‚éƒf[ƒ^”‚ÍA‚±‚±‚Åw’è‚µ‚½”ÍˆÍ‚Å§ŒÀ‚³‚ê‚Ü‚·B
+      This function allows definining the scope (start and end steps) for measurement. The number of measurement data (steps) returned by urg_get_distance() and similar is defined here.
 
-      \param[in,out] urg URG ƒZƒ“ƒTŠÇ—
-      \param[in] first_step Œv‘ª‚ÌŠJn step
-      \param[in] last_step Œv‘ª‚ÌI—¹ step
-      \param[in] skip_step Œv‘ªƒf[ƒ^‚ğƒOƒ‹[ƒsƒ“ƒO‚·‚éŒÂ”
+      \param[in,out] urg URG control structure
+      \param[in] first_step start step number
+      \param[in] last_step end step number
+      \param[in] skip_step step grouping factor
 
-      \retval 0 ³í
-      \retval <0 ƒGƒ‰[
+      \retval 0 Successful
+      \retval <0 Error
 
-      ƒZƒ“ƒT‚Ì step ‚ÍAƒZƒ“ƒT³–Ê‚ğ 0 ‚Æ‚µAƒZƒ“ƒTã•”‚©‚çŒ©‚Ä”½Œv‚Ü‚í‚è‚ÌŒü‚«‚ª³‚Ì’l‚Æ‚È‚é‡‚ÉŠ„‚èU‚ç‚ê‚Ü‚·B
+      Observing the sensor from the top, the step 0 corresponds to the very front of the sensor, steps at the left side (counter clockwise) of step 0 are positive numbers and those to the right side (clockwise) are negative numbers.
 
-      \image html sensor_angle_image.png ƒZƒ“ƒT‚Æ step ‚ÌŠÖŒW
+      \image html sensor_angle_image.png shows the relation between sensor and steps
 
-      step ‚ÌŠÔŠu‚ÆAÅ‘å’lAÅ¬’l‚ÍƒZƒ“ƒTˆË‘¶‚Å‚·Bstep ’l‚ÌÅ‘å’lAÅ¬’l‚Í urg_step_min_max() ‚Åæ“¾‚Å‚«‚Ü‚·B\n
+      The spacing between steps, the minimum and maximum step numbers depend on the sensor. Use urg_step_min_max() to get the minimum and maximum step values.\n
 
-      first_step, last_step ‚Åƒf[ƒ^‚ÌŒv‘ª”ÍˆÍ‚ğw’è‚µ‚Ü‚·BŒv‘ª”ÍˆÍ‚Í [first_step, last_step] ‚Æ‚È‚è‚Ü‚·B
+      first_step and last_step define the data measurement scope ([first_step, last_step])ï¿½B
 
-      skip_step ‚ÍAŒv‘ªƒf[ƒ^‚ğƒOƒ‹[ƒsƒ“ƒO‚·‚éŒÂ”‚ğw’è‚µ‚Ü‚·Bw’è‚Å‚«‚é’l‚Í [0, 99] ‚Å‚·B\n
-      skip_step ‚ÍAw’è‚³‚ê‚½”‚Ìƒf[ƒ^‚ğ 1 ‚Â‚É‚Ü‚Æ‚ß‚é‚±‚Æ‚ÅAƒZƒ“ƒT‚©‚çóM‚·‚éƒf[ƒ^—Ê‚ğŒ¸‚ç‚µA‹——£æ“¾‚ğs‚¤ŠÖ”‚Ì‰“š«‚ğ‚‚ß‚é‚Æ‚«‚Ég‚¢‚Ü‚·B‚½‚¾‚µAƒf[ƒ^‚ğ‚Ü‚Æ‚ß‚é‚½‚ßA“¾‚ç‚ê‚éƒf[ƒ^‚Ì•ª‰ğ”\‚ÍŒ¸‚è‚Ü‚·B
+      skip_step allows setting a step grouping factor, where valid values are [0, 99].\n
+      With the skip_step parameter, several adjacent steps are grouped and combined into 1 single step, thus the amount of data transmitted from the sensor is reduced and so the response time of measurement data adquisition functions. Of course, grouping several steps into one means the measurement resolution is reduced.
 
-      —á‚¦‚ÎˆÈ‰º‚Ì‚æ‚¤‚È‹——£ƒf[ƒ^‚ª“¾‚ç‚ê‚éê‡‚É
+      For example, for the following range data obtained in the sensor:
       \verbatim
       100, 101, 102, 103, 104, 105, 106, 107, 108, 109
       \endverbatim
 
-      skip_step ‚É 2 ‚ğw’è‚·‚é‚ÆA“¾‚ç‚ê‚éƒf[ƒ^‚Í
+      And setting skip_step to 2, the range data returned is:
       \verbatim
+      100, 102, 104, 106, 108
       \endverbatim
 
-      ƒf[ƒ^‚ÍA‚Ü‚Æ‚ß‚éƒf[ƒ^‚Ì‚¤‚¿Aˆê”Ô¬‚³‚È’l‚Ìƒf[ƒ^‚ª—p‚¢‚ç‚ê‚Ü‚·B
-
-      \~
+      for each group, the smallest range value is returned.
       Example
       \code
       urg_set_scanning_parameter(&urg, urg_deg2step(&urg, -45),
@@ -499,108 +478,103 @@ extern "C" {
       printf("%d [mm], %d [deg]\n", data[i], urg_index2deg(&urg, i));
       } \endcode
 
-      \~
       \see urg_step_min_max(), urg_rad2step(), urg_deg2step()
     */
     extern int urg_set_scanning_parameter(urg_t *urg, int first_step,
                                           int last_step, int skip_step);
 
-
     /*!
-      \~japanese
-      \brief ’ÊMƒf[ƒ^‚ÌƒTƒCƒY•ÏX
+      \brief Change the size (number of bytes) of measurement data used during communications.
 
-      ‹——£ƒf[ƒ^‚ğƒZƒ“ƒT‚©‚çóM‚ÌÛ‚Ìƒf[ƒ^ƒTƒCƒY‚ğ•ÏX‚µ‚Ü‚·B
+      When receiving data from the sensor, changes the number of bytes used to represent measurement data.
 
-      \param[in,out] urg URG ƒZƒ“ƒTŠÇ—
-      \param[in] data_byte ‹——£’l‚ğ•\Œ»‚·‚éƒf[ƒ^‚ÌƒoƒCƒg”
+      \param[in,out] urg URG control structure
+      \param[in] data_byte Number of bytes used to represent measurement data
 
-      \retval 0 ¬Œ÷
-      \retval <0 ƒGƒ‰[
+      \retval 0 Successful
+      \retval <0 Error
 
-      data_byte ‚É‚Í
+      data_byte can be:
 
-      - URG_COMMUNICATION_3_BYTE ... ‹——£‚ğ 3 byte ‚Å•\Œ»‚·‚é
-      - URG_COMMUNICATION_2_BYTE ... ‹——£‚ğ 2 byte ‚Å•\Œ»‚·‚é
+      - URG_COMMUNICATION_3_BYTE ... to represent data in 3 bytes
+      - URG_COMMUNICATION_2_BYTE ... to represent data in 2 bytes
 
-      ‚ğw’è‚Å‚«‚Ü‚·B\n
-      ‰Šúó‘Ô‚Å‚Í‹——£‚ğ 3 byte ‚Å•\Œ»‚·‚é‚æ‚¤‚É‚È‚Á‚Ä‚¢‚Ü‚·B‚±‚Ìİ’è‚ğ 2 byte ‚Éİ’è‚·‚é‚±‚Æ‚ÅAƒZƒ“ƒT‚©‚çóM‚·‚éƒf[ƒ^”‚Í 2/3 ‚É‚È‚è‚Ü‚·B‚½‚¾‚µAæ“¾‚Å‚«‚é‹——£‚ÌÅ‘å’l‚ª 4095 ‚É‚È‚é‚½‚ßAŠÏ‘ª‚µ‚½‚¢‘ÎÛ‚ª 4 [m] ˆÈ“à‚Ì”ÍˆÍ‚É‘¶İ‚·‚éê‡‚Ì‚İ—˜—p‚µ‚Ä‰º‚³‚¢B
+       \n
+      The initial (default) data size is 3 bytes. If the number of bytes is changed to 2, the actual received message length becomes around 2/3 of the original length. However, using 2 bytes means the maximum measurement range is 4095, therefore use it only when measurement targets are 4 [m] from the sensor.
     */
-    extern int urg_set_communication_data_size(urg_t *urg,
+    extern int urg_set_measurement_data_size(urg_t *urg,
                                                urg_range_data_byte_t data_byte);
 
 
-    /*! \~japanese ƒŒ[ƒU‚ğ”­Œõ‚³‚¹‚é */
+    /*!
+       \brief Turns on the laser
+    */
     extern int urg_laser_on(urg_t *urg);
 
 
-    /*! \~japanese ƒŒ[ƒU‚ğÁ“”‚·‚é */
+    /*!
+       \brief Turns off the laser
+    */
     extern int urg_laser_off(urg_t *urg);
 
 
-    /*! \~japanese ƒZƒ“ƒT‚ğÄ‹N“®‚·‚é */
+    /*!
+       \brief Reboots the sensor
+    */
     extern int urg_reboot(urg_t *urg);
 
 
     /*!
-      \~japanese
-      \brief ƒZƒ“ƒT‚ğ’áÁ”ï“d—Í‚Ìó‘Ô‚É‘JˆÚ‚³‚¹‚é
+      \brief Sets the sensor into low power mode (sleep state)
 
-      ’áÁ”ï“d—Í‚Ìƒ‚[ƒh‚Å‚ÍAƒXƒLƒƒƒi‚Ì‰ñ“]‚ª’â~‚µŒv‘ª‚à’†’f‚³‚ê‚Ü‚·B
+      During low power mode, the scanner motor stops and so measurement is interrupted.
 
-      - ’áÁ”ï“d—Í‚Ìƒ‚[ƒh
-        - ƒŒ[ƒU‚ªÁ“”‚µ‚ÄŒv‘ª‚ª’†’f‚³‚ê‚éB
-        - ƒXƒLƒƒƒi‚Ì‰ñ“]‚ª’â~‚·‚éB
+      - Low power mode
+        - Laser is turned off and so measurement is stopped
+        - The scanner motor is stopped.
 
-      ’áÁ”ï“d—Í‚Ìƒ‚[ƒh‚©‚ç”²‚¯‚é‚½‚ß‚É‚Í \ref urg_wakeup() ŠÖ”‚ğŒÄ‚Ño‚µ‚Ä‰º‚³‚¢B
-
+      To recover from low power mode call the function \ref urg_wakeup()
       \see urg_wakeup()
     */
     extern void urg_sleep(urg_t *urg);
 
 
     /*!
-      \~japanese
-      \brief ƒZƒ“ƒT‚ğ’áÁ”ï“d—Í‚Ìƒ‚[ƒh‚©‚ç’Êí‚Ìó‘Ô‚É‘JˆÚ‚³‚¹‚é
-
+      \brief Returns from the low power mode (sleep state) to the normal mode (idle state)
       \see urg_sleep()
     */
     extern void urg_wakeup(urg_t *urg);
 
     /*!
-      \~japanese
-      \brief ƒZƒ“ƒT‚ªŒv‘ª‚Å‚«‚éó‘Ô‚©‚ğ•Ô‚·
+      \brief Returns whether the sensor is stable to perform measurement or not
 
-      \retval 1 ƒZƒ“ƒT‚ªŒv‘ª‚Å‚«‚éó‘Ô‚É‚ ‚é
-      \retval 0 ƒZƒ“ƒT‚ªŒv‘ª‚Å‚«‚éó‘Ô‚É‚È‚¢
+      \retval 1 The sensor can do measurement
+      \retval 0 The sensor cannot do measurement
 
-      ‹N“®’¼Œã‚ÅƒXƒLƒƒƒi‚Ì‰ñ“]‚ªˆÀ’è‚µ‚Ä‚¢‚È‚¢ê‡‚âA‰½‚ç‚©‚ÌƒGƒ‰[‚ÅŒv‘ª‚Å‚«‚È‚¢ê‡A‚±‚ÌŠÖ”‚Í 0 ‚ğ•Ô‚µ‚Ü‚·B
+      Right after power on the motor rotation is not yet stable for measurement, or if any failure condition was detected,
+      0 is returned.
     */
     extern int urg_is_stable(urg_t *urg);
 
 
     /*!
-      \~japanese
-      \brief ƒZƒ“ƒTŒ^®‚ğ•¶š—ñ‚Å•Ô‚·
+      \brief Returns the sensor model string
 
-      ƒZƒ“ƒT‚ÌŒ^®‚ğ•¶š—ñ‚Å•Ô‚·B•Ô‚³‚ê‚é•¶š—ñ‚ÍƒZƒ“ƒTˆË‘¶‚Æ‚È‚éB
+      Returns the string message corresponding to the sensor model. This message is sensor dependent.
 
-      \param[in] urg URG ƒZƒ“ƒTŠÇ—
-
-      \return ƒZƒ“ƒTŒ^®‚Ì•¶š—ñ
+      \param[in] urg URG control structure
+      \return sensor model string
     */
     extern const char *urg_sensor_product_type(urg_t *urg);
 
 
     /*!
-      \~japanese
-      \brief ƒZƒ“ƒT‚ÌƒVƒŠƒAƒ‹ ID •¶š—ñ‚ğ•Ô‚·
+      \brief Returns the sensor serial number string
 
-      ƒZƒ“ƒT‚ÌƒVƒŠƒAƒ‹ ID •¶š—ñ‚ğ•Ô‚·B•Ô‚³‚ê‚é•¶š—ñ‚ÍƒZƒ“ƒTˆË‘¶‚Æ‚È‚éB
+      Returns the string message corresponding to the sensor serial number. This message is sensor dependent.
 
-      \param[in] urg URG ƒZƒ“ƒTŠÇ—
-
-      \return ƒVƒŠƒAƒ‹ ID •¶š—ñ
+      \param[in] urg URG control structure
+      \return serial number string
     */
     extern const char *urg_sensor_serial_id(urg_t *urg);
 
@@ -615,71 +589,56 @@ extern "C" {
 
 
     /*!
-      \~japanese
-      \brief ƒZƒ“ƒT‚Ìƒo[ƒWƒ‡ƒ“•¶š—ñ‚ğ•Ô‚·
+      \brief Returns the current sensor firmware version string
 
-      ƒZƒ“ƒT‚Ìƒ\ƒtƒgƒEƒFƒAEƒo[ƒWƒ‡ƒ“•¶š—ñ‚ğ•Ô‚·B•Ô‚³‚ê‚é•¶š—ñ‚ÍƒZƒ“ƒTˆË‘¶‚Æ‚È‚éB
+      Returns the string message corresponding to the current sensor firmware version. This message is sensor dependent.
 
-      \param[in] urg URG ƒZƒ“ƒTŠÇ—
-
-      \return ƒo[ƒWƒ‡ƒ“•¶š—ñ
+      \param[in] urg URG control structure
+      \return firmware version string
     */
     extern const char *urg_sensor_firmware_version(urg_t *urg);
 
     extern const char *urg_sensor_firmware_date(urg_t *urg);
 
     /*!
-      \brief returns the protocol version
+      \brief Returns the current sensor status string
 
-      \param[in] URG
+      Returns the string message corresponding to the current sensor status. This message is sensor dependent.
 
-      \return The current protocol version
-    */
-    extern const char *urg_sensor_protocol_version(urg_t *urg);
-
-    /*!
-      \~japanese
-      \brief ƒZƒ“ƒT‚ÌƒXƒe[ƒ^ƒX•¶š—ñ‚ğ•Ô‚·
-
-      ƒZƒ“ƒT‚ÌƒXƒe[ƒ^ƒX•¶š—ñ‚ğ•Ô‚·B•Ô‚³‚ê‚é•¶š—ñ‚ÍƒZƒ“ƒTˆË‘¶‚Æ‚È‚éB
-
-      \param[in] urg URG ƒZƒ“ƒTŠÇ—
-      \return ƒXƒe[ƒ^ƒX•¶š—ñ
+      \param[in] urg URG control structure
+      \return current sensor status string
     */
     extern const char *urg_sensor_status(urg_t *urg);
 
 
     /*!
-      \~japanese
-      \brief ƒZƒ“ƒT‚Ìó‘Ô‚ğ•Ô‚·
+      \brief Returns the current sensor state string
 
-      ƒZƒ“ƒT‚ÌƒXƒe[ƒ^ƒX•¶š—ñ‚ğ•Ô‚·B•Ô‚³‚ê‚é•¶š—ñ‚ÍƒZƒ“ƒTˆË‘¶‚Æ‚È‚éB
+      Returns the string message corresponding to the current sensor state. This message is sensor dependent.
 
-      \param[in] urg URG ƒZƒ“ƒTŠÇ—
-      \return ó‘Ô‚ğ¦‚·•¶š—ñ
+      \param[in] urg URG control structure
+      \return current sensor state string
 
-      \attention ó‘Ô‚É‚Â‚¢‚Ä‚Í SCIP ‚Ì’ÊMd—l‘‚ğQÆ‚Ì‚±‚ÆB
+      \attention For details, please refer to the SCIP communication protocol specification.
     */
     extern const char *urg_sensor_state(urg_t *urg);
 
 
     /*!
-      \~japanese
-      \brief Œv‘ª—p‚ÌƒGƒ‰[ƒnƒ“ƒhƒ‰‚ğ“o˜^‚·‚é
+      \brief Registers an error handler for measurement functions
 
-      ƒGƒ‰[ƒnƒ“ƒhƒ‰‚Í Gx, Mx Œn‚ÌƒRƒ}ƒ“ƒh‚Ì‰“š‚ª "00" ‚© "99" ˆÈŠO‚Ì‚Æ‚«‚ÉŒÄ‚Ño‚³‚ê‚éB
+      The error handler will be called for the Gx, Mx commands when the response code is not "00" or "99".
     */
     extern void urg_set_error_handler(urg_t *urg, urg_error_handler handler);
 
 
     /*!
-      \~japanese
-      \brief SCIP •¶š—ñ‚ÌƒfƒR[ƒh‚ğs‚¤
+      \brief Decodes a SCIP message
 
-      \param[in] data SCIP •¶š—ñ
-      \param[in] data ‚Ì byte ƒTƒCƒY
+      \param[in] data the SCIP message to decode
+      \param[in] size the data encoding types (number of bytes for encoding)
 
-      \retval ƒfƒR[ƒhŒã‚Ì”’l
+      \retval Value after decoding
     */
     extern long urg_scip_decode(const char data[], int size);
 

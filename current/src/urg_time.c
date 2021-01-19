@@ -6,7 +6,7 @@
   $Id: urg_utils.c,v da778fd816c2 2011/01/05 20:02:06 Satofumi $
 */
 
-#include "urg_c/urg_time.h"
+#include "urg_time.h"
 
 // Portable time function borrowed from ros::Time
 void urg_walltime(unsigned long *sec, unsigned long *nsec) 

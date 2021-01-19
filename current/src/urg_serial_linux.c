@@ -1,15 +1,15 @@
 /*!
   \file
-  \brief シリアル通信
-
+   Serial communications in Linux
   \author Satofumi KAMIMURA
 
   $Id$
 */
 
-#include "urg_c/urg_ring_buffer.h"
+#include "urg_ring_buffer.h"
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/types.h>
 
 
 enum {
@@ -43,11 +43,11 @@ int serial_open(urg_serial_t *serial, const char *device, long baudrate)
     serial_initialize(serial);
 
 #ifndef URG_MAC_OS
-    enum { O_EXLOCK = 0x0 }; /* Linux では使えないのでダミーを作成しておく */
+    enum { O_EXLOCK = 0x0 }; /*  Not used in Linux, used as dummy */
 #endif
     serial->fd = open(device, O_RDWR | O_EXLOCK | O_NONBLOCK | O_NOCTTY);
     if (serial->fd < 0) {
-        /* 接続に失敗 */
+        /*  Connection failed */
         //strerror_r(errno, serial->error_string, ERROR_MESSAGE_SIZE);
         return -1;
     }
@@ -55,7 +55,7 @@ int serial_open(urg_serial_t *serial, const char *device, long baudrate)
     flags = fcntl(serial->fd, F_GETFL, 0);
     fcntl(serial->fd, F_SETFL, flags & ~O_NONBLOCK);
 
-    /* シリアル通信の初期化 */
+    /*  Initializes serial communication  */
     tcgetattr(serial->fd, &serial->sio);
     serial->sio.c_iflag = 0;
     serial->sio.c_oflag = 0;
@@ -66,13 +66,12 @@ int serial_open(urg_serial_t *serial, const char *device, long baudrate)
     serial->sio.c_cc[VMIN] = 0;
     serial->sio.c_cc[VTIME] = 0;
 
-    /* ボーレートの変更 */
     ret = serial_set_baudrate(serial, baudrate);
     if (ret < 0) {
         return ret;
     }
 
-    /* シリアル制御構造体の初期化 */
+    /*  Initializes serial control structures */
     serial->has_last_ch = False;
 
     return 0;
@@ -121,7 +120,7 @@ int serial_set_baudrate(urg_serial_t *serial, long baudrate)
         return -1;
     }
 
-    /* ボーレート変更 */
+    /*  Changes the baudrate */
     cfsetospeed(&serial->sio, baudrate_value);
     cfsetispeed(&serial->sio, baudrate_value);
     tcsetattr(serial->fd, TCSADRAIN, &serial->sio);
@@ -145,7 +144,7 @@ static int wait_receive(urg_serial_t* serial, int timeout)
     fd_set rfds;
     struct timeval tv;
 
-    // タイムアウト設定
+    // Configures the timeout
     FD_ZERO(&rfds);
     FD_SET(serial->fd, &rfds);
 
@@ -154,7 +153,7 @@ static int wait_receive(urg_serial_t* serial, int timeout)
 
     if (select(serial->fd + 1, &rfds, NULL, NULL,
                (timeout < 0) ? NULL : &tv) <= 0) {
-        /* タイムアウト発生 */
+        /*  Timeout occurred */
         return 0;
     }
     return 1;
@@ -181,7 +180,7 @@ static int internal_receive(char data[], int data_size_max,
         require_n = data_size_max - filled;
         read_n = read(serial->fd, &data[filled], require_n);
         if (read_n <= 0) {
-            /* 読み出しエラー。現在までの受信内容で戻る */
+            /*  Read error, returns all the data up to now */
             break;
         }
         filled += read_n;
@@ -200,7 +199,7 @@ int serial_read(urg_serial_t *serial, char *data, int max_size, int timeout)
         return 0;
     }
 
-    /* 書き戻した１文字があれば、書き出す */
+    /*  If there is a single character return it */
     if (serial->has_last_ch != False) {
         data[0] = serial->last_ch;
         serial->has_last_ch = False;
@@ -217,7 +216,7 @@ int serial_read(urg_serial_t *serial, char *data, int max_size, int timeout)
     buffer_size = ring_size(&serial->ring);
     read_n = max_size - filled;
     if (buffer_size < read_n) {
-        // リングバッファ内のデータで足りなければ、データを読み足す
+        // Reads data if there is space in the ring buffer
         char buffer[RING_BUFFER_SIZE];
         int n = internal_receive(buffer,
                                  ring_capacity(&serial->ring) - buffer_size,
@@ -228,7 +227,7 @@ int serial_read(urg_serial_t *serial, char *data, int max_size, int timeout)
         }
     }
 
-    // リングバッファ内のデータを返す
+    // Returns the data stored in the ring buffer
     if (read_n > buffer_size) {
         read_n = buffer_size;
     }
@@ -237,7 +236,7 @@ int serial_read(urg_serial_t *serial, char *data, int max_size, int timeout)
         filled += read_n;
     }
 
-    // データをタイムアウト付きで読み出す
+    // Reads data within the given timeout
     filled += internal_receive(&data[filled], max_size - filled,
                                serial, timeout);
     return filled;

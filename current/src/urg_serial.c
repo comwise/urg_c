@@ -1,13 +1,12 @@
 /*!
   \file
-  \brief シリアル通信
-
+  \brief Serial communications
   \author Satofumi KAMIMURA
 
-  $Id: urg_serial.c,v 0caa22c18f6b 2010/12/30 03:36:32 Satofumi $
+  $Id$
 */
 
-#include "urg_c/urg_serial.h"
+#include "urg_serial.h"
 
 
 enum {
@@ -23,7 +22,7 @@ enum {
 #endif
 
 
-// 改行かどうかの判定
+// Checks wheter is is a EOL character
 static int is_linefeed(const char ch)
 {
     return ((ch == '\r') || (ch == '\n')) ? 1 : 0;
@@ -39,7 +38,7 @@ static void serial_ungetc(urg_serial_t *serial, char ch)
 
 int serial_readline(urg_serial_t *serial, char *data, int max_size, int timeout)
 {
-    /* １文字ずつ読み出して評価する */
+    /* Reads and evaluates 1 character at a time */
     int filled = 0;
     int is_timeout = 0;
 

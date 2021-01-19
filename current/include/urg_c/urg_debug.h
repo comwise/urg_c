@@ -7,11 +7,7 @@
 
   \author Satofumi KAMIMURA
 
-  \~japanese
-  \attention 使う必要はありません。
-
-  \~english
-  \attention Don't need to use these functions.
+  \attention It is not necessary to use these functions.
 
   $Id$
 */
@@ -20,18 +16,24 @@
 extern "C" {
 #endif
 
-#include "urg_c/urg_sensor.h"
+#include "urg_sensor.h"
 
 
-    /*! \~japanese センサにデータを直接送信する */
+    /*!
+     \brief Directly send raw data to the sensor
+    */
     extern int urg_raw_write(urg_t *urg, const char *data, int data_size);
 
 
-    /*! \~japanese センサからデータを直接受信する */
+    /*!
+     \brief Directly get raw data from the sensor
+    */
     extern int urg_raw_read(urg_t *urg, char *data, int max_data_size,
                             int timeout);
 
-    /*! \~japanese センサから改行までのデータを直接受信する */
+    /*!
+     \brief Directly get raw data from the sensor until end-of-line
+     */
     extern int urg_raw_readline(urg_t *urg,char *data, int max_data_size,
                                 int timeout);
 

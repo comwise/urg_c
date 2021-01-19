@@ -1,17 +1,16 @@
 /*!
   \file
-  \brief シリアル用の補助関数
-
+  \brief Serial communication auxiliary functions for Windows
   \author Satofumi KAMIMURA
 
-  $Id: urg_serial_utils_windows.c,v faa71b0113fd 2011/01/17 12:00:22 Satofumi $
+  $Id$
 
-  \todo 変数名を '_' 区切りの形式に変更する
-  \todo C90 相当で動作するように調整する。ただし、"//" コメントは使う
+  \todo Change variable names to use the "_" convention
+  \todo Fix the code to be C90 compliant, but keeping the "//" comments
 */
 
-#include "urg_c/urg_serial_utils.h"
-#include "urg_c/urg_detect_os.h"
+#include "urg_serial_utils.h"
+#include "urg_detect_os.h"
 #include <windows.h>
 #include <setupapi.h>
 #include <string.h>
@@ -74,7 +73,7 @@ static void sort_ports(void)
 
 int urg_serial_find_port(void)
 {
-    // デバイスマネージャの一覧から COM デバイスを探す
+    // Searchs for COM devices from the list of device manager
 
     //4D36E978-E325-11CE-BFC1-08002BE10318
     GUID GUID_DEVINTERFACE_COM_DEVICE = {
@@ -108,24 +107,24 @@ int urg_serial_find_port(void)
         int n;
         int j;
 
-        // フレンドリーネームを取得して COM 番号を取り出す
+        // Gets the Friendly name property and gets the COM port number
         SetupDiGetDeviceRegistryPropertyA(hdi, &sDevInfo, SPDRP_FRIENDLYNAME,
                                           &dwRegType, (BYTE*)buffer, BufferSize,
                                           &dwSize);
         n = (int)strlen(buffer);
         if (n < ComNameLengthMax) {
-            // COM 名が短過ぎた場合、処理しない
-            // 問題がある場合は、修正する
+            // If the COM name is too small, ignore it
+            // (fix this in case of problems)
             continue;
         }
 
-        // (COMx) の最後の括弧の位置に '\0' を代入する
+        // Adds '\0' at the end of the string
         p = strrchr(buffer, ')');
         if (p) {
             *p = '\0';
         }
 
-        // COM と番号までの文字列を抜き出す
+        // Split name into "COM" and the number
         p = strstr(&buffer[n - ComNameLengthMax], "COM");
         if (! p) {
             continue;
@@ -133,7 +132,7 @@ int urg_serial_find_port(void)
 
         snprintf(found_ports[found_ports_size], DEVICE_NAME_SIZE, "%s", p);
 
-        // デバイス名を取得し、URG ポートかの判定に用いる
+        // Get the device names and detect the URG port
         SetupDiGetDeviceRegistryPropertyA(hdi, &sDevInfo, SPDRP_DEVICEDESC,
                                           &dwRegType, (BYTE*)buffer, BufferSize,
                                           &dwSize);
@@ -150,7 +149,7 @@ int urg_serial_find_port(void)
     }
     SetupDiDestroyDeviceInfoList(hdi);
 
-    // is_urg_port の要素が先頭に来るようにソートする
+    // sort the elements in is_urg_port array
     sort_ports();
 
     return found_ports_size;

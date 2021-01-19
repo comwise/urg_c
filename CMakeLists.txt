@@ -1,9 +1,9 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.0.2)
 project(urg_c)
 
 # Set library locations to better handle if upstream locations change
 set(LIBRARY_DIR current)
-set(LIBRARY_INCLUDE_DIR ${LIBRARY_DIR}/include)
+set(LIBRARY_INCLUDE_DIR ${LIBRARY_DIR}/include/urg_c)
 set(LIBRARY_SRC_DIR ${LIBRARY_DIR}/src)
 set(LIBRARY_SAMPLE_DIR ${LIBRARY_DIR}/samples)
 
@@ -39,48 +39,50 @@ add_library(liburg_c ${LIBRARY_SRC_DIR}/urg_sensor.c
 	                 ${LIBRARY_SRC_DIR}/urg_serial.c
 	                 ${LIBRARY_SRC_DIR}/urg_serial_utils.c
 	                 ${LIBRARY_SRC_DIR}/urg_tcpclient.c
-	                 ${LIBRARY_SRC_DIR}/urg_time.c
+					 ${LIBRARY_SRC_DIR}/urg_time.c
+					 ${LIBRARY_SRC_DIR}/Urg_driver.cpp
+					 ${LIBRARY_SRC_DIR}/ticks.cpp
 
 )
 if(NOT ANDROID)
 	target_link_libraries(liburg_c -lrt -lm)
 endif(NOT ANDROID)
 
-add_library(open_urg_sensor ${LIBRARY_SAMPLE_DIR}/open_urg_sensor.c)
+add_library(open_urg_sensor ${LIBRARY_SAMPLE_DIR}/c/open_urg_sensor.c)
 target_link_libraries(open_urg_sensor -lm liburg_c ${catkin_LIBRARIES})
 
 ## Declare samples
-add_executable(angle_convert_test ${LIBRARY_SAMPLE_DIR}/angle_convert_test.c)
+add_executable(angle_convert_test ${LIBRARY_SAMPLE_DIR}/c/angle_convert_test.c)
 target_link_libraries(angle_convert_test liburg_c open_urg_sensor ${catkin_LIBRARIES})
 
-add_executable(calculate_xy ${LIBRARY_SAMPLE_DIR}/calculate_xy.c)
+add_executable(calculate_xy ${LIBRARY_SAMPLE_DIR}/c/calculate_xy.c)
 target_link_libraries(calculate_xy liburg_c open_urg_sensor ${catkin_LIBRARIES})
 
-add_executable(find_port ${LIBRARY_SAMPLE_DIR}/find_port.c)
+add_executable(find_port ${LIBRARY_SAMPLE_DIR}/c/find_port.c)
 target_link_libraries(find_port liburg_c open_urg_sensor ${catkin_LIBRARIES})
 
-add_executable(get_distance ${LIBRARY_SAMPLE_DIR}/get_distance.c)
+add_executable(get_distance ${LIBRARY_SAMPLE_DIR}/c/get_distance.c)
 target_link_libraries(get_distance liburg_c open_urg_sensor ${catkin_LIBRARIES})
 
-add_executable(get_distance_intensity ${LIBRARY_SAMPLE_DIR}/get_distance_intensity.c)
+add_executable(get_distance_intensity ${LIBRARY_SAMPLE_DIR}/c/get_distance_intensity.c)
 target_link_libraries(get_distance_intensity liburg_c open_urg_sensor ${catkin_LIBRARIES})
 
-add_executable(get_multiecho ${LIBRARY_SAMPLE_DIR}/get_multiecho.c)
+add_executable(get_multiecho ${LIBRARY_SAMPLE_DIR}/c/get_multiecho.c)
 target_link_libraries(get_multiecho liburg_c open_urg_sensor ${catkin_LIBRARIES})
 
-add_executable(get_multiecho_intensity ${LIBRARY_SAMPLE_DIR}/get_multiecho_intensity.c)
+add_executable(get_multiecho_intensity ${LIBRARY_SAMPLE_DIR}/c/get_multiecho_intensity.c)
 target_link_libraries(get_multiecho_intensity liburg_c open_urg_sensor ${catkin_LIBRARIES})
 
-add_executable(reboot_test ${LIBRARY_SAMPLE_DIR}/reboot_test.c)
+add_executable(reboot_test ${LIBRARY_SAMPLE_DIR}/c/reboot_test.c)
 target_link_libraries(reboot_test liburg_c open_urg_sensor ${catkin_LIBRARIES})
 
-add_executable(sensor_parameter ${LIBRARY_SAMPLE_DIR}/sensor_parameter.c)
+add_executable(sensor_parameter ${LIBRARY_SAMPLE_DIR}/c/sensor_parameter.c)
 target_link_libraries(sensor_parameter liburg_c open_urg_sensor ${catkin_LIBRARIES})
 
-add_executable(sync_time_stamp ${LIBRARY_SAMPLE_DIR}/sync_time_stamp.c)
+add_executable(sync_time_stamp ${LIBRARY_SAMPLE_DIR}/c/sync_time_stamp.c)
 target_link_libraries(sync_time_stamp liburg_c open_urg_sensor ${catkin_LIBRARIES})
 
-add_executable(timeout_test ${LIBRARY_SAMPLE_DIR}/timeout_test.c)
+add_executable(timeout_test ${LIBRARY_SAMPLE_DIR}/c/timeout_test.c)
 target_link_libraries(timeout_test liburg_c open_urg_sensor ${catkin_LIBRARIES})
 
 #############
